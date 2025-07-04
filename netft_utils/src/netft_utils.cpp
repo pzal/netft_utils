@@ -35,6 +35,10 @@ NetftUtils::NetftUtils()
   payloadWeight(0.),
   payloadLeverArm(0.)
 {
+  this->declare_parameter("world_frame", "world");
+  this->declare_parameter("ft_frame", "ft_sensor");
+  this->declare_parameter("max_force", 50.0);
+  this->declare_parameter("max_torque", 5.0);
 }
 
 NetftUtils::~NetftUtils()
@@ -157,6 +161,24 @@ void NetftUtils::setUserInput(std::string world, std::string ft, double force, d
   }
 }
 
+void NetftUtils::initializeFromParameters()
+{
+  std::string world_frame = this->get_parameter("world_frame").as_string();
+  std::string ft_frame = this->get_parameter("ft_frame").as_string();
+  double forceMaxU = this->get_parameter("max_force").as_double();
+  double torqueMaxU = this->get_parameter("max_torque").as_double();
+  
+  setUserInput(world_frame, ft_frame, forceMaxU, torqueMaxU);
+  
+  RCLCPP_INFO(this->get_logger(), "Initialized with world_frame='%s', ft_frame='%s', max_force=%.1f, max_torque=%.1f",
+              world_frame.c_str(), ft_frame.c_str(), forceMaxU, torqueMaxU);
+  
+  update_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(2),
+    std::bind(&NetftUtils::update, this)
+  );
+}
+
 /**
    * @brief Updates the internal state, applies filtering and transforms, checks force/torque limits, and publishes processed wrench data.
    *
@@ -179,7 +201,7 @@ void NetftUtils::update()
     // listener->waitForTransform(world_frame, ft_frame, ros::Time(0), ros::Duration(1.0));
     // listener->lookupTransform(world_frame, ft_frame, ros::Time(0), tempTransform);
   } catch (tf2::TransformException ex) {
-    RCLCPP_ERROR(get_logger(), ex.what());
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 3000, "%s", ex.what());
   }
 
   // Set translation to zero before updating value
@@ -188,13 +210,11 @@ void NetftUtils::update()
 
   checkMaxForce();
 
-  // Publish transformed dat
+  // Publish transformed data
   netft_raw_world_data_pub->publish(raw_data_world);
   netft_world_data_pub->publish(tf_data_world);
   netft_tool_data_pub->publish(tf_data_tool);
   netft_cancel_pub->publish(cancel_msg);
-
-  rclcpp::spin_some(this->shared_from_this());
 }
 
 /**
@@ -532,48 +552,21 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
 
   // Instantiate utils class
-  // NetftUtils utils;
   auto utils = std::make_shared<netft_utils::NetftUtils>();
+  
   // Initialize utils
   utils->initialize();
+  
+  utils->initializeFromParameters();
 
   // Set up a multi-threaded executor
   using rclcpp::executors::MultiThreadedExecutor;
   MultiThreadedExecutor exec;
   exec.add_node(utils);
+  
+  RCLCPP_INFO(utils->getLog(), "NetftUtils node started, spinning executor...");
+  
   exec.spin();
-
-  // Set up user input
-  std::string world_frame;
-  std::string ft_frame;
-  double forceMaxU = 0.0;
-  double torqueMaxU = 0.0;
-  if (argc < 3) {
-    RCLCPP_FATAL(
-      utils->getLog(),
-      "You must pass in at least the world and ft frame as command line arguments. Argument "
-      "options are [world frame, ft frame, max force, max torque]");
-    return 1;
-  } else if (argc >= 6) {
-    RCLCPP_FATAL(utils->getLog(), "Too many arguments for netft_utils");
-  } else {
-    world_frame = argv[1];
-    ft_frame = argv[2];
-    if (argc >= 4) forceMaxU = atof(argv[3]);
-    if (5 == argc) torqueMaxU = atof(argv[4]);
-  }
-  utils->setUserInput(world_frame, ft_frame, forceMaxU, torqueMaxU);
-
-  // Main ros loop
-  rclcpp::Rate loop_rate(500);
-  //ros::Time last;
-  while (rclcpp::ok()) {
-    utils->update();
-    loop_rate.sleep();
-    //ros::Time curr = ros::Time::now();
-    //ROS_INFO_STREAM("Loop time: " <<  curr.toSec()-last.toSec());
-    //last = curr;
-  }
 
   return 0;
 }

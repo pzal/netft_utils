@@ -40,6 +40,7 @@ namespace netft_utils
 
     void initialize();
     void setUserInput(std::string world, std::string ft, double force, double torque);
+    void initializeFromParameters();
     void update();
     rclcpp::Logger getLog();
 
@@ -107,6 +108,8 @@ namespace netft_utils
     rclcpp::Service<netft_interfaces::srv::SetBias>::SharedPtr weight_bias_service;
     rclcpp::Service<netft_interfaces::srv::GetDouble>::SharedPtr get_weight_service;
     rclcpp::Service<netft_interfaces::srv::SetFilter>::SharedPtr filter_service;
+    
+    rclcpp::TimerBase::SharedPtr update_timer_;
 
     ////////////////////
     // Callback methods
