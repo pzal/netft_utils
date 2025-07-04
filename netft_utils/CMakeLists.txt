@@ -116,6 +116,12 @@ install(TARGETS netft_rdt_driver
   RUNTIME DESTINATION bin
 )
 
+install(TARGETS lpfilter
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
