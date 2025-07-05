@@ -381,17 +381,17 @@ namespace netft_utils_lean
       lp->update(tempData,tempData);
 
     // Copy tool frame data.
-    raw_data_tool.header.stamp = data.header.stamp;
-    raw_data_tool.header.frame_id = ft_frame;
-    raw_data_tool.wrench.force.x = tempData.at(0);
-    raw_data_tool.wrench.force.y = tempData.at(1);
-    raw_data_tool.wrench.force.z = tempData.at(2);
-    raw_data_tool.wrench.torque.x = tempData.at(3);
-    raw_data_tool.wrench.torque.y = tempData.at(4);
-    raw_data_tool.wrench.torque.z = tempData.at(5);
+    raw_data_ft.header.stamp = data.header.stamp;
+    raw_data_ft.header.frame_id = ft_frame;
+    raw_data_ft.wrench.force.x = tempData.at(0);
+    raw_data_ft.wrench.force.y = tempData.at(1);
+    raw_data_ft.wrench.force.z = tempData.at(2);
+    raw_data_ft.wrench.torque.x = tempData.at(3);
+    raw_data_ft.wrench.torque.y = tempData.at(4);
+    raw_data_ft.wrench.torque.z = tempData.at(5);
 
     // Apply bias
-    copyWrench(raw_data_tool, tf_data_tool, bias);
+    copyWrench(raw_data_ft, tf_data_tool, bias);
 
     // Copy in new netft data in tool frame and transform to world frame
     transformFrame(tf_data_tool, tf_data_world, 'w');
@@ -455,16 +455,16 @@ namespace netft_utils_lean
           }
         }
         // Copy tool frame data.
-        raw_data_tool.header.stamp = data.header.stamp;
-        raw_data_tool.header.frame_id = ft_frame;
-        raw_data_tool.wrench.force.x = -data.wrench.force.x;
-        raw_data_tool.wrench.force.y = data.wrench.force.y;
-        raw_data_tool.wrench.force.z = data.wrench.force.z;
-        raw_data_tool.wrench.torque.x = -data.wrench.torque.x;
-        raw_data_tool.wrench.torque.y = data.wrench.torque.y;
-        raw_data_tool.wrench.torque.z = data.wrench.torque.z;
+        raw_data_ft.header.stamp = data.header.stamp;
+        raw_data_ft.header.frame_id = ft_frame;
+        raw_data_ft.wrench.force.x = -data.wrench.force.x;
+        raw_data_ft.wrench.force.y = data.wrench.force.y;
+        raw_data_ft.wrench.force.z = data.wrench.force.z;
+        raw_data_ft.wrench.torque.x = -data.wrench.torque.x;
+        raw_data_ft.wrench.torque.y = data.wrench.torque.y;
+        raw_data_ft.wrench.torque.z = data.wrench.torque.z;
       }
-      copyWrench(raw_data_tool, bias, zero_wrench);
+      copyWrench(raw_data_ft, bias, zero_wrench);
       isNewBias = true;
     }
     else
@@ -586,7 +586,7 @@ namespace netft_utils_lean
 
   void NetftUtilsLean::getRawData(geometry_msgs::msg::WrenchStamped& data)
   {
-    data = raw_data_tool;
+    data = raw_data_ft;
   }
 
   void NetftUtilsLean::getToolData(geometry_msgs::msg::WrenchStamped& data)

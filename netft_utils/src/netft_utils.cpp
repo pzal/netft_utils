@@ -83,7 +83,7 @@ void NetftUtils::initialize()
   netft_world_data_pub =
     create_publisher<geometry_msgs::msg::WrenchStamped>("transformed_world", 100000);
   netft_tool_data_pub =
-    create_publisher<geometry_msgs::msg::WrenchStamped>("transformed_tool", 100000);
+    create_publisher<geometry_msgs::msg::WrenchStamped>("transformed_ft", 100000);
   netft_cancel_pub = create_publisher<netft_interfaces::msg::Cancel>("cancel", 100000);
 
   //Advertise bias and threshold services
@@ -292,18 +292,18 @@ void NetftUtils::netftCallback(const geometry_msgs::msg::WrenchStamped::ConstPtr
 
   if (isFilterOn && !newFilter) lp->update(tempData, tempData);
 
-  // Copy tool frame data. apply negative to x data to follow right hand rule convention (ft raw data does not)
-  raw_data_tool.header.stamp = data->header.stamp;
-  raw_data_tool.header.frame_id = ft_frame;
-  raw_data_tool.wrench.force.x = tempData.at(0);
-  raw_data_tool.wrench.force.y = tempData.at(1);
-  raw_data_tool.wrench.force.z = tempData.at(2);
-  raw_data_tool.wrench.torque.x = tempData.at(3);
-  raw_data_tool.wrench.torque.y = tempData.at(4);
-  raw_data_tool.wrench.torque.z = tempData.at(5);
+  // Copy ft sensor frame data. 
+  raw_data_ft.header.stamp = data->header.stamp;
+  raw_data_ft.header.frame_id = ft_frame;
+  raw_data_ft.wrench.force.x = tempData.at(0);
+  raw_data_ft.wrench.force.y = tempData.at(1);
+  raw_data_ft.wrench.force.z = tempData.at(2);
+  raw_data_ft.wrench.torque.x = tempData.at(3);
+  raw_data_ft.wrench.torque.y = tempData.at(4);
+  raw_data_ft.wrench.torque.z = tempData.at(5);
 
   // Copy in new netft data in tool frame and transform to world frame
-  transformFrame(raw_data_tool, raw_data_world, 'w');
+  transformFrame(raw_data_ft, raw_data_world, 'w');
 
   if (isGravityBiased)  // Compensate for gravity. Assumes world Z-axis is up
   {
@@ -335,7 +335,7 @@ void NetftUtils::netftCallback(const geometry_msgs::msg::WrenchStamped::ConstPtr
   } else  // Just pass the data straight through
   {
     copyWrench(raw_data_world, tf_data_world, zero_wrench);
-    copyWrench(raw_data_tool, tf_data_tool, zero_wrench);
+    copyWrench(raw_data_ft, tf_data_tool, zero_wrench);
   }
 
   // Apply thresholds
@@ -364,7 +364,7 @@ bool NetftUtils::fixedOrientationBias(
 {
   if (req.bias) {
     copyWrench(
-      raw_data_tool, bias,
+      raw_data_ft, bias,
       zero_wrench);  // Store the current wrench readings in the 'bias' variable, to be applied hereafter
     if (req.force >= 0.0001)  // if forceMax was specified and > 0
       forceMaxB = req.force;
@@ -404,7 +404,7 @@ bool NetftUtils::compensateForGravity(
       // Calculate the z-coordinate of the payload's center of mass, in the sensor frame.
       // It's assumed that the x- and y-coordinates are zero.
       // This is a lever arm.
-      payloadLeverArm = raw_data_tool.wrench.torque.y / raw_data_tool.wrench.force.x;
+      payloadLeverArm = raw_data_ft.wrench.torque.y / raw_data_ft.wrench.force.x;
 
       isNewGravityBias = true;
       isGravityBiased = true;
@@ -444,7 +444,7 @@ bool NetftUtils::setWeightBias(
   netft_interfaces::srv::SetBias::Request & req, netft_interfaces::srv::SetBias::Response & res)
 {
   if (req.bias) {
-    copyWrench(raw_data_tool, weight_bias, zero_wrench);
+    copyWrench(raw_data_ft, weight_bias, zero_wrench);
   } else {
     copyWrench(zero_wrench, weight_bias, zero_wrench);
   }
@@ -457,7 +457,7 @@ bool NetftUtils::getWeight(
   netft_interfaces::srv::GetDouble::Request & req, netft_interfaces::srv::GetDouble::Response & res)
 {
   geometry_msgs::msg::WrenchStamped carried_weight;
-  copyWrench(raw_data_tool, carried_weight, weight_bias);
+  copyWrench(raw_data_ft, carried_weight, weight_bias);
   res.weight =
     pow(
       (pow(carried_weight.wrench.force.x, 2.0) + pow(carried_weight.wrench.force.y, 2.0) +

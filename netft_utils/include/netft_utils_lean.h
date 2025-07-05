@@ -77,7 +77,7 @@ namespace netft_utils_lean
 
     // Wrenches used to hold force/torque and bias data
     geometry_msgs::msg::WrenchStamped bias;               // Wrench containing the current bias data in tool frame
-    geometry_msgs::msg::WrenchStamped raw_data_tool;      // Wrench containing the current raw data from the netft sensor in the tool frame
+    geometry_msgs::msg::WrenchStamped raw_data_ft;        // Wrench containing the current raw data from the netft sensor in the ft sensor frame
     geometry_msgs::msg::WrenchStamped tf_data_world;      // Wrench containing the transformed (world frame) data with bias and threshold applied
     geometry_msgs::msg::WrenchStamped tf_data_tool;       // Wrench containing the transformed (tool frame) data with bias and threshold applied
     geometry_msgs::msg::WrenchStamped zero_wrench;        // Wrench of all zeros for convenience

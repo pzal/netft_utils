@@ -64,7 +64,7 @@ namespace netft_utils
     geometry_msgs::msg::WrenchStamped bias;               // Wrench containing the current bias data in tool frame
     geometry_msgs::msg::WrenchStamped weight_bias;        // Wrench containing the bias at a measurement pose (to measure the weight)
     geometry_msgs::msg::WrenchStamped raw_data_world;     // Wrench containing the current raw data from the netft sensor transformed into the world frame
-    geometry_msgs::msg::WrenchStamped raw_data_tool;      // Wrench containing the current raw data from the netft sensor in the tool frame
+    geometry_msgs::msg::WrenchStamped raw_data_ft;        // Wrench containing the current raw data from the netft sensor in the ft sensor frame
     geometry_msgs::msg::WrenchStamped tf_data_world;      // Wrench containing the transformed (world frame) data with bias and threshold applied
     geometry_msgs::msg::WrenchStamped tf_data_tool;       // Wrench containing the transformed (tool frame) data with bias and threshold applied
     geometry_msgs::msg::WrenchStamped zero_wrench;        // Wrench of all zeros for convenience
